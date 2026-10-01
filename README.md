@@ -6,12 +6,12 @@
 
 ## 📊 Overall Progress
 
-![Progress](https://img.shields.io/badge/Progress-2%2F21%20Chapters-brightgreen)
+![Progress](https://img.shields.io/badge/Progress-3%2F21%20Chapters-brightgreen)
 ![Status](https://img.shields.io/badge/Status-Active-blue)
 ![Started](https://img.shields.io/badge/Started-30%20Sep%202026-orange)
 
 ```
-Progress: ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░  2/21 Chapters (10%)
+Progress: ██████░░░░░░░░░░░░░░░░░░░░░░░░  4/21 Chapters (19%)
 ```
 
 ---
@@ -21,9 +21,9 @@ Progress: ██░░░░░░░░░░░░░░░░░░░░░�
 | Chapter | Topic | Date Completed | Status |
 |---------|-------|---------------|--------|
 | Chapter 1 | Setup & Project Structure | 30 Sep 2026 | ✅ Done |
-| Chapter 2 | JSX | - | ⏳ Pending |
-| Chapter 3 | Components | - | ⏳ Pending |
-| Chapter 4 | Props | - | ⏳ Pending |
+| Chapter 2 | JSX | 30 Sep 2026 | ✅ Done |
+| Chapter 3 | Components | 01 Oct 2026 | ✅ Done |
+| Chapter 4 | Props | 01 Oct 2026 | ✅ Done |
 | Chapter 5 | Rendering Lists & Conditional Rendering | - | ⏳ Pending |
 | Chapter 6 | Handling Events | - | ⏳ Pending |
 | Chapter 7 | State with useState | - | ⏳ Pending |
@@ -711,5 +711,231 @@ export default App
 | Nothing shows, no error | Forgot to use `<Header />` in `App.jsx`, or forgot `return` |
 
 **Key takeaway:** A component is a function that returns JSX. Build small components, one per file, and combine them into a tree under `App`. Write it once, reuse it anywhere.
+
+---
+
+### ✅ Chapter 4 — Props
+
+**Prerequisites (quick summary):**
+
+| Prerequisite | What it is (simple) |
+|--------------|---------------------|
+| Components (Chapter 3) | Functions that return JSX, reused like tags |
+| JS function parameters | Values you pass into a function: `greet("Aadit")` |
+| JS objects | `{ name: "Aadit", role: "Student" }` with `object.name` access |
+| Destructuring | Pulling values out of an object: `const { name, role } = user` |
+
+**What are Props?**
+Props (short for properties) are the data you pass into a component from its parent. They make one component show different content each time you use it.
+
+```
+Without props → 3 identical cards, same text everywhere
+With props    → 3 cards, each shows different name, role, skills
+```
+
+Think of a component as a function and props as its arguments:
+```
+Function:   greet("Aadit")           → "Hello, Aadit"
+Component:  <Greet name="Aadit" />   → <h1>Hello, Aadit</h1>
+```
+
+**Passing props (parent → child):** write them like HTML attributes.
+```jsx
+<ProfileCard name="Aadit" role="Student" experience={1} />
+```
+
+**Receiving props (in the child):** React gives the component ONE object called `props`.
+```jsx
+function ProfileCard(props) {
+  return <h2>{props.name}</h2>
+}
+```
+`props` here is `{ name: "Aadit", role: "Student", experience: 1 }`.
+
+**Destructuring props (the standard way):** pull the values out in the function parameter.
+```jsx
+function ProfileCard({ name, role, experience }) {
+  return (
+    <div>
+      <h2>{name}</h2>
+      <p>{role}</p>
+      <p>{experience} year(s)</p>
+    </div>
+  )
+}
+```
+> Same thing as `props.name`, `props.role`, but shorter and cleaner.
+
+**Passing different types of values:**
+
+| Type | How to pass | Example |
+|------|-------------|---------|
+| String | Quotes | `name="Aadit"` |
+| Number | Curly braces | `experience={1}` |
+| Boolean | Curly braces (or shorthand) | `isOpenToWork={true}` or just `isOpenToWork` |
+| Array | Curly braces | `skills={["HTML", "CSS"]}` |
+| Object | Double curly braces | `address={{ city: "Mumbai", state: "MH" }}` |
+| Function | Curly braces | `onClick={handleClick}` (covered in Chapter 6) |
+| Variable | Curly braces | `name={userName}` |
+
+> Rule: plain text goes in quotes. Everything else goes in `{ }`. `experience="1"` passes the text "1", not the number 1.
+
+**Default values:** used when the parent doesn't pass the prop.
+```jsx
+function Footer({ year = 2026 }) {
+  return <p>© {year} Aadit</p>
+}
+
+<Footer />              // © 2026 Aadit
+<Footer year={2030} />  // © 2030 Aadit
+```
+
+**The special `children` prop:** whatever you put between the opening and closing tags.
+```jsx
+function Card({ children }) {
+  return <div className="card">{children}</div>
+}
+
+<Card>
+  <h2>Hello</h2>
+  <p>Anything can go here</p>
+</Card>
+```
+```
+<Card> ...stuff... </Card>
+         │
+         └── becomes the `children` prop inside Card
+```
+> Useful for wrappers like cards, modals, layouts, buttons.
+
+**Spread syntax for many props:**
+```jsx
+const user = { name: "Aadit", role: "Student", experience: 1 }
+
+<ProfileCard {...user} />
+// same as: <ProfileCard name="Aadit" role="Student" experience={1} />
+```
+
+**Props rules:**
+
+| Rule | Meaning |
+|------|---------|
+| Props are read-only | A child must NEVER change its props (`name = "X"` is wrong) |
+| Data flows one way | Parent → child only, never child → parent (one-way data flow) |
+| Props change → component re-renders | React redraws the component with the new values |
+| Prop names are camelCase | `isOpenToWork`, not `is-open-to-work` |
+
+```
+App (parent)
+ │  name="Aadit", role="Student"
+ ▼
+ProfileCard (child)  → can read them, cannot change them
+```
+
+> To make data that CAN change, we use state (Chapter 7).
+
+**Practice task I did:**
+
+`src/components/Header.jsx`
+```jsx
+function Header({ title }) {
+  return (
+    <header style={{ background: "#222", color: "white", padding: "12px" }}>
+      <h1>{title}</h1>
+    </header>
+  )
+}
+
+export default Header
+```
+
+`src/components/ProfileCard.jsx`
+```jsx
+function ProfileCard({ name, role, experience, skills, isOpenToWork = false, children }) {
+  return (
+    <div style={{ border: "1px solid gray", padding: "12px", margin: "12px", width: "280px" }}>
+      <h2>{name}</h2>
+      <p>{role}</p>
+      <p>Experience: {experience} year(s)</p>
+      <p>Skills: {skills.join(", ")}</p>
+      <p>{isOpenToWork ? "Open to work ✅" : "Not looking right now"}</p>
+      {children}
+    </div>
+  )
+}
+
+export default ProfileCard
+```
+
+`src/components/Footer.jsx`
+```jsx
+function Footer({ year = 2026 }) {
+  return (
+    <footer style={{ padding: "12px" }}>
+      <p>© {year} Aadit</p>
+    </footer>
+  )
+}
+
+export default Footer
+```
+
+`src/App.jsx`
+```jsx
+import Header from './components/Header'
+import ProfileCard from './components/ProfileCard'
+import Footer from './components/Footer'
+
+function App() {
+  return (
+    <>
+      <Header title="Team Profiles" />
+
+      <ProfileCard
+        name="Aadit"
+        role="Computer Engineering Student"
+        experience={1}
+        skills={["HTML", "CSS", "JavaScript"]}
+        isOpenToWork={true}
+      />
+
+      <ProfileCard
+        name="Riya"
+        role="UI Designer"
+        experience={3}
+        skills={["Figma", "CSS"]}
+      />
+
+      <ProfileCard
+        name="Karan"
+        role="Backend Developer"
+        experience={2}
+        skills={["Python", "Django"]}
+        isOpenToWork
+      >
+        <p>Note: available from January</p>
+      </ProfileCard>
+
+      <Footer />
+    </>
+  )
+}
+
+export default App
+```
+> Each card now shows different data from the same component. Riya's card uses the default `isOpenToWork = false`. Karan's card uses `children` for the extra note.
+
+**Common errors:**
+
+| Error | Fix |
+|-------|-----|
+| Prop shows `undefined` | Name mismatch between parent and child, or forgot to pass it |
+| `Cannot read properties of undefined (reading 'join')` | Array prop wasn't passed, pass it or give a default (`skills = []`) |
+| Number behaves like text (`"1" + 1 = "11"`) | Wrote `experience="1"`, use `experience={1}` |
+| `Cannot assign to read only property` | Tried to change a prop, props are read-only |
+| `Objects are not valid as a React child` | Printed a whole object, print a property like `{address.city}` |
+| Forgot destructuring braces | Write `function Card({ name })`, not `function Card(name)` |
+
+**Key takeaway:** Props are how a parent sends data to a child. They are read-only and flow one way (parent → child). Destructure them in the function parameter, use defaults for optional ones, and use `children` for content placed between tags.
 
 ---
