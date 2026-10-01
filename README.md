@@ -6,12 +6,12 @@
 
 ## 📊 Overall Progress
 
-![Progress](https://img.shields.io/badge/Progress-1%2F21%20Chapters-brightgreen)
+![Progress](https://img.shields.io/badge/Progress-2%2F21%20Chapters-brightgreen)
 ![Status](https://img.shields.io/badge/Status-Active-blue)
 ![Started](https://img.shields.io/badge/Started-30%20Sep%202026-orange)
 
 ```
-Progress: █░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  1/21 Chapters (5%)
+Progress: ██░░░░░░░░░░░░░░░░░░░░░░░░░░░░  2/21 Chapters (10%)
 ```
 
 ---
@@ -316,11 +316,400 @@ git push                             # upload to GitHub
 
 ---
 
-## 📌 Coming Up Next
+### ✅ Chapter 2 — JSX
 
-- ⏳ Chapter 2 — JSX
-- ⏳ Chapter 3 — Components
-- ⏳ Chapter 4 — Props
-- ⏳ Chapter 5 — Rendering Lists & Conditional Rendering
+**Prerequisites (quick summary):**
 
-*Last Updated: 30 Sep 2026*
+| Prerequisite | What it is (simple) |
+|--------------|---------------------|
+| Chapter 1 setup | A running Vite + React project |
+| HTML basics | Tags, attributes, nesting (`<div>`, `<h1>`, `<img>`) |
+| JS expressions | Anything that produces a value: `2 + 3`, `name`, `age > 18 ? "adult" : "minor"` |
+
+**What is JSX?**
+JSX (JavaScript XML) is a syntax that lets you write HTML-like code inside JavaScript. It is not HTML. Browsers can't read it, so Vite converts it into plain JavaScript before running.
+
+```
+What you write (JSX):        <h1>Hello</h1>
+What Vite converts it to:    React.createElement("h1", null, "Hello")
+What the browser runs:       plain JavaScript that creates an <h1>
+```
+
+> JSX is optional (you could write `createElement` by hand), but nobody does. It makes UI code short and readable.
+
+**JSX vs HTML — key differences:**
+
+| HTML | JSX | Why |
+|------|-----|-----|
+| `class="box"` | `className="box"` | `class` is a reserved word in JavaScript |
+| `for="name"` | `htmlFor="name"` | `for` is a reserved word in JavaScript |
+| `onclick="..."` | `onClick={...}` | Attributes are written in camelCase |
+| `tabindex="1"` | `tabIndex={1}` | camelCase again |
+| `<img src="a.png">` | `<img src="a.png" />` | Every tag must be closed |
+| `style="color: red"` | `style={{ color: "red" }}` | Style is a JS object, not a string |
+| `<!-- comment -->` | `{/* comment */}` | Comments live inside `{ }` |
+
+**The 6 rules of JSX:**
+
+**Rule 1 — Return only ONE parent element**
+```jsx
+// ❌ Wrong — two siblings at the top
+return (
+  <h1>Title</h1>
+  <p>Text</p>
+)
+
+// ✅ Right — wrapped in one parent
+return (
+  <div>
+    <h1>Title</h1>
+    <p>Text</p>
+  </div>
+)
+```
+
+**Rule 2 — Use a Fragment when you don't want an extra `<div>`**
+```jsx
+return (
+  <>
+    <h1>Title</h1>
+    <p>Text</p>
+  </>
+)
+```
+> `<> </>` is a Fragment: an invisible wrapper. It groups elements without adding anything to the page.
+
+**Rule 3 — Close every tag**
+```jsx
+<img src="logo.png" alt="Logo" />
+<br />
+<input type="text" />
+```
+
+**Rule 4 — Use camelCase and `className`**
+```jsx
+<div className="card" tabIndex={0}>...</div>
+```
+
+**Rule 5 — Wrap multi-line JSX in parentheses after `return`**
+```jsx
+return (
+  <div>
+    <h1>Hello</h1>
+  </div>
+)
+```
+> Without the parentheses, `return` followed by a new line returns `undefined` and nothing shows up.
+
+**Rule 6 — Component names start with a capital letter**
+```jsx
+<App />     // ✅ React treats this as a component
+<app />     // ❌ React treats this as an HTML tag
+```
+
+**Using JavaScript inside JSX — curly braces `{ }`**
+
+`{ }` is a window from JSX back into JavaScript. Anything that produces a value can go inside it.
+
+```jsx
+const name = "Aadit"
+const age = 21
+
+<h1>Hello, {name}</h1>                      {/* variable */}
+<p>Next year I'll be {age + 1}</p>          {/* math */}
+<p>{name.toUpperCase()}</p>                 {/* function call */}
+<p>{age >= 18 ? "Adult" : "Minor"}</p>      {/* ternary */}
+```
+
+| ✅ Allowed inside `{ }` (expressions) | ❌ Not allowed (statements) |
+|--------------------------------------|----------------------------|
+| variables, math, function calls | `if (...) { }` |
+| ternary `a ? b : c` | `for (...) { }` |
+| `&&` / `\|\|` | `let x = 5` |
+| arrays, template literals | `switch` |
+
+> Simple rule: if you can put it on the right side of `=`, you can put it inside `{ }`.
+
+**Curly braces in attributes:**
+```jsx
+const link = "https://github.com"
+<a href={link}>My GitHub</a>       // ✅ no quotes around {link}
+<a href="{link}">My GitHub</a>     // ❌ this is the literal text "{link}"
+```
+
+**Inline styles — double curly braces:**
+```jsx
+<h1 style={{ color: "blue", fontSize: "24px" }}>Hello</h1>
+```
+```
+style={ { color: "blue" } }
+       │ └── the JS object
+       └──── outer braces: "JavaScript coming"
+```
+> CSS properties become camelCase: `font-size` → `fontSize`, `background-color` → `backgroundColor`. Values are strings.
+
+**Comments in JSX:**
+```jsx
+{/* This is a comment inside JSX */}
+```
+
+**Practice task I did (`src/App.jsx`):**
+```jsx
+function App() {
+  const name = "Aadit"
+  const role = "Computer Engineering Student"
+  const skills = ["HTML", "CSS", "JavaScript"]
+  const isLearningReact = true
+  const githubLink = "https://github.com/AaditMistry1114"
+
+  const cardStyle = {
+    border: "1px solid gray",
+    borderRadius: "8px",
+    padding: "16px",
+    width: "300px",
+  }
+
+  return (
+    <>
+      {/* Profile card */}
+      <div style={cardStyle}>
+        <h1>{name}</h1>
+        <p>{role}</p>
+        <p>Skills: {skills[0]}, {skills[1]}, {skills[2]}</p>
+        <p>{isLearningReact ? "Learning React 🚀" : "Not learning React"}</p>
+        <a href={githubLink}>My GitHub</a>
+      </div>
+    </>
+  )
+}
+
+export default App
+```
+
+**Common errors:**
+
+| Error | Fix |
+|-------|-----|
+| `Adjacent JSX elements must be wrapped in an enclosing tag` | Wrap in one parent or use `<> </>` |
+| `Unexpected token` near `if` inside JSX | Statements aren't allowed in `{ }`, use a ternary |
+| Styling not applied | Used `class` instead of `className` |
+| Page shows `{name}` as text | Put the variable in `{ }` without quotes |
+| `Objects are not valid as a React child` | You put an object inside `{ }`, print a property like `{user.name}` instead |
+| Nothing renders after `return` | Missing parentheses around multi-line JSX |
+
+**Key takeaway:** JSX is HTML-like syntax that becomes JavaScript. Use `{ }` for any JS expression, `className` instead of `class`, close every tag, and return one parent (or a Fragment).
+
+---
+
+### ✅ Chapter 3 — Components
+
+**Prerequisites (quick summary):**
+
+| Prerequisite | What it is (simple) |
+|--------------|---------------------|
+| JSX (Chapter 2) | The HTML-like syntax a component returns |
+| JS functions | A block of code you can call and reuse: `function add(a, b) { return a + b }` |
+| `import` / `export` | How JS files share code with each other |
+
+**What is a Component?**
+A component is a JavaScript function that returns JSX. It is a reusable piece of UI. A whole React app is just many components combined, like Lego blocks.
+
+```
+Component = function + returns JSX
+
+function Welcome() {
+  return <h1>Hello!</h1>
+}
+```
+
+**Why use components?**
+
+| Without components | With components |
+|--------------------|-----------------|
+| One huge file with all the UI | Small files, each with one job |
+| Copy-paste the same card 10 times | Write once, use 10 times |
+| Change a button → edit 10 places | Change a button → edit 1 place |
+
+**Using a component:** write it like an HTML tag.
+```jsx
+<Welcome />
+```
+
+**Component tree:** components nest inside each other like a family tree.
+```
+App
+├── Header
+├── ProfileCard
+│   └── Skills
+├── ProfileCard      ← same component, reused
+└── Footer
+```
+> `App` is the root. Every other component is a child, grandchild, and so on.
+
+**Rules of components:**
+
+| Rule | Why |
+|------|-----|
+| Name starts with a capital letter (`Header`, not `header`) | Lowercase = HTML tag, capital = component |
+| Must return JSX (or `null` to show nothing) | That is what gets drawn on the page |
+| Return only one parent (or a Fragment `<> </>`) | Same rule as JSX |
+| One component per file, file named after the component | Easy to find (`Header.jsx` holds `Header`) |
+| Never define a component inside another component | It gets recreated on every render, causing bugs and slowness |
+
+**Creating a component in its own file:**
+
+Step 1 — Make a `components` folder inside `src/` and add `Header.jsx`:
+```jsx
+function Header() {
+  return (
+    <header>
+      <h1>My React App</h1>
+    </header>
+  )
+}
+
+export default Header
+```
+
+Step 2 — Import and use it in `App.jsx`:
+```jsx
+import Header from './components/Header'
+
+function App() {
+  return (
+    <>
+      <Header />
+    </>
+  )
+}
+
+export default App
+```
+
+**Default export vs Named export:**
+
+| | Default export | Named export |
+|---|----------------|--------------|
+| Export | `export default Header` | `export function Footer() {...}` |
+| Import | `import Header from './Header'` | `import { Footer } from './Footer'` |
+| Per file | Only ONE | As many as needed |
+| Import name | Any name you like | Must match exactly (in `{ }`) |
+
+> Common convention: one component per file with `export default`.
+
+**Import path rules:**
+```
+'./components/Header'   → ./  means "start from this file's folder"
+'../components/Header'  → ../ means "go one folder up"
+```
+> You can skip the `.jsx` extension when importing.
+
+**Why does the same component work many times?**
+Each `<ProfileCard />` is a separate copy created from the same function. Changing the function changes all copies.
+
+**Folder structure:**
+```
+src/
+├── components/
+│   ├── Header.jsx
+│   ├── Footer.jsx
+│   ├── ProfileCard.jsx
+│   └── Skills.jsx
+├── App.jsx
+├── main.jsx
+└── index.css
+```
+
+**Practice task I did:**
+
+`src/components/Header.jsx`
+```jsx
+function Header() {
+  return (
+    <header style={{ background: "#222", color: "white", padding: "12px" }}>
+      <h1>My Profile Page</h1>
+    </header>
+  )
+}
+
+export default Header
+```
+
+`src/components/Skills.jsx`
+```jsx
+function Skills() {
+  return (
+    <ul>
+      <li>HTML</li>
+      <li>CSS</li>
+      <li>JavaScript</li>
+    </ul>
+  )
+}
+
+export default Skills
+```
+
+`src/components/ProfileCard.jsx` (nests `Skills`)
+```jsx
+import Skills from './Skills'
+
+function ProfileCard() {
+  return (
+    <div style={{ border: "1px solid gray", padding: "12px", margin: "12px", width: "260px" }}>
+      <h2>Aadit</h2>
+      <p>Computer Engineering Student</p>
+      <Skills />
+    </div>
+  )
+}
+
+export default ProfileCard
+```
+
+`src/components/Footer.jsx` (named export, to practice both styles)
+```jsx
+export function Footer() {
+  return (
+    <footer style={{ padding: "12px" }}>
+      <p>© 2026 Aadit</p>
+    </footer>
+  )
+}
+```
+
+`src/App.jsx`
+```jsx
+import Header from './components/Header'
+import ProfileCard from './components/ProfileCard'
+import { Footer } from './components/Footer'
+
+function App() {
+  return (
+    <>
+      <Header />
+      <ProfileCard />
+      <ProfileCard />
+      <ProfileCard />
+      <Footer />
+    </>
+  )
+}
+
+export default App
+```
+> All three cards look identical for now. In Chapter 4 (Props) we'll make each one show different data.
+
+**Common errors:**
+
+| Error | Fix |
+|-------|-----|
+| Component shows as an unknown HTML tag / nothing renders | Name is lowercase, use a capital letter |
+| `Failed to resolve import './components/Header'` | Wrong path or filename spelling |
+| `... is not exported` / `does not provide an export named default` | Mismatch: default export imported with `{ }`, or the reverse |
+| `Element type is invalid` | Forgot `export`, or imported the wrong thing |
+| Nothing shows, no error | Forgot to use `<Header />` in `App.jsx`, or forgot `return` |
+
+**Key takeaway:** A component is a function that returns JSX. Build small components, one per file, and combine them into a tree under `App`. Write it once, reuse it anywhere.
+
+---
