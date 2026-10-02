@@ -6,12 +6,12 @@
 
 ## 📊 Overall Progress
 
-![Progress](https://img.shields.io/badge/Progress-3%2F21%20Chapters-brightgreen)
+![Progress](https://img.shields.io/badge/Progress-5%2F21%20Chapters-brightgreen)
 ![Status](https://img.shields.io/badge/Status-Active-blue)
 ![Started](https://img.shields.io/badge/Started-30%20Sep%202026-orange)
 
 ```
-Progress: ██████░░░░░░░░░░░░░░░░░░░░░░░░  4/21 Chapters (19%)
+Progress: ███████░░░░░░░░░░░░░░░░░░░░░░░  5/21 Chapters (24%)
 ```
 
 ---
@@ -24,7 +24,7 @@ Progress: ██████░░░░░░░░░░░░░░░░░�
 | Chapter 2 | JSX | 30 Sep 2026 | ✅ Done |
 | Chapter 3 | Components | 01 Oct 2026 | ✅ Done |
 | Chapter 4 | Props | 01 Oct 2026 | ✅ Done |
-| Chapter 5 | Rendering Lists & Conditional Rendering | - | ⏳ Pending |
+| Chapter 5 | Rendering Lists & Conditional Rendering | 02 Oct 2026 | ✅ Done |
 | Chapter 6 | Handling Events | - | ⏳ Pending |
 | Chapter 7 | State with useState | - | ⏳ Pending |
 | Chapter 8 | Controlled Inputs & Forms | - | ⏳ Pending |
@@ -937,5 +937,284 @@ export default App
 | Forgot destructuring braces | Write `function Card({ name })`, not `function Card(name)` |
 
 **Key takeaway:** Props are how a parent sends data to a child. They are read-only and flow one way (parent → child). Destructure them in the function parameter, use defaults for optional ones, and use `children` for content placed between tags.
+
+---
+
+### ✅ Chapter 5 — Rendering Lists & Conditional Rendering
+
+**Prerequisites (quick summary):**
+
+| Prerequisite | What it is (simple) |
+|--------------|---------------------|
+| Props (Chapter 4) | Data passed from parent to child |
+| `array.map()` | Loops over an array and returns a NEW array: `[1,2,3].map(n => n * 2)` → `[2,4,6]` |
+| `array.filter()` | Returns a new array with only items that pass a test: `[1,2,3].filter(n => n > 1)` → `[2,3]` |
+| Ternary operator | Short if/else: `condition ? valueIfTrue : valueIfFalse` |
+| `&&` operator | `a && b` gives `b` if `a` is truthy, otherwise gives `a` |
+
+---
+
+#### Part 1 — Rendering Lists
+
+**The problem:** real apps show data from arrays (users, products, posts). You can't write 100 `<ProfileCard />` by hand.
+
+**The solution:** use `map()` to turn an array of data into an array of JSX.
+
+```jsx
+const names = ["Aadit", "Riya", "Karan"]
+
+<ul>
+  {names.map((name) => (
+    <li key={name}>{name}</li>
+  ))}
+</ul>
+```
+```
+["Aadit", "Riya", "Karan"]
+        │  map()
+        ▼
+[<li>Aadit</li>, <li>Riya</li>, <li>Karan</li>]   ← React draws these
+```
+
+> We use `map()` (not `for` or `forEach`) because JSX needs a value, and `map()` returns a new array. `forEach` returns nothing, so nothing renders.
+
+**Rendering an array of objects (most common case):**
+```jsx
+const people = [
+  { id: 1, name: "Aadit", role: "Student" },
+  { id: 2, name: "Riya", role: "Designer" },
+]
+
+{people.map((person) => (
+  <ProfileCard key={person.id} name={person.name} role={person.role} />
+))}
+```
+Or with spread (works when the object keys match the prop names):
+```jsx
+{people.map((person) => (
+  <ProfileCard key={person.id} {...person} />
+))}
+```
+
+**What is `key`?**
+When rendering a list, every item needs a `key` prop. It is a unique ID that helps React track which item is which when the list changes (items added, removed, reordered).
+
+| Without key | With key |
+|-------------|----------|
+| React shows a warning in the console | No warning |
+| On changes, React may update the wrong items | React updates only the item that changed |
+
+**Rules for keys:**
+
+| Rule | Example |
+|------|---------|
+| Must be unique among siblings (in the same list) | `key={person.id}` |
+| Must be stable (same item = same key every render) | Use database `id`, not a random value |
+| Put the key on the outermost element returned inside `map()` | On `<ProfileCard key=... />`, not on something inside it |
+| `key` is NOT passed to the component as a prop | You can't read `props.key` |
+
+```jsx
+// ✅ Good — stable, unique ID
+key={person.id}
+
+// ❌ Bad — changes every render, defeats the purpose
+key={Math.random()}
+
+// ⚠️ Index — only OK for static lists that never reorder, filter or change
+key={index}
+```
+> If your data has no id, you can add one when creating the data. Avoid `index` for lists that can change.
+
+**Filtering a list before rendering:**
+```jsx
+const available = people.filter((person) => person.isOpenToWork)
+
+{available.map((person) => (
+  <ProfileCard key={person.id} {...person} />
+))}
+```
+```
+people → filter() → only matching items → map() → JSX
+```
+
+**Sorting a list (copy first!):**
+```jsx
+const sorted = [...people].sort((a, b) => a.name.localeCompare(b.name))
+```
+> `sort()` changes the original array. Always copy with `[...people]` first.
+
+**Empty list:** show a message instead of nothing (see conditional rendering below).
+
+---
+
+#### Part 2 — Conditional Rendering
+
+**What is it?** Showing different UI depending on a condition (logged in or not, loading or loaded, list empty or not). React has no special syntax for this, you use normal JavaScript.
+
+**Method 1 — if / else with early return**
+Best when the whole component changes.
+```jsx
+function Status({ isLoggedIn }) {
+  if (!isLoggedIn) {
+    return <p>Please log in.</p>
+  }
+
+  return <p>Welcome back!</p>
+}
+```
+
+**Method 2 — Ternary `? :`**
+Best for choosing between two things inside JSX.
+```jsx
+<p>{isOpenToWork ? "Open to work ✅" : "Not looking right now"}</p>
+```
+
+**Method 3 — `&&` (logical AND)**
+Best for showing something OR nothing.
+```jsx
+{isOpenToWork && <span>🟢 Available</span>}
+```
+```
+condition true  → shows the JSX
+condition false → shows nothing
+```
+
+**⚠️ The `0` trap with `&&`:**
+```jsx
+{count && <p>You have {count} items</p>}   // if count is 0, it prints 0 on the page!
+{count > 0 && <p>You have {count} items</p>}   // ✅ always make it a true/false check
+```
+> React doesn't render `true`, `false`, `null` or `undefined`, but it DOES render the number `0`.
+
+**Method 4 — Variable (for bigger blocks)**
+```jsx
+let badge = null
+if (experience >= 3) {
+  badge = <span>Senior</span>
+} else {
+  badge = <span>Junior</span>
+}
+
+return <div>{badge}</div>
+```
+
+**Method 5 — Return `null`** (render nothing)
+```jsx
+function Banner({ show }) {
+  if (!show) return null
+  return <div>Sale today!</div>
+}
+```
+
+**Which method to use?**
+
+| Situation | Use |
+|-----------|-----|
+| Whole component changes | `if` with early `return` |
+| Choose between two values/elements | Ternary `? :` |
+| Show something or nothing | `&&` |
+| Many branches / big blocks | Variable with `if / else if` |
+| Component should show nothing | `return null` |
+
+> You can't write `if` directly inside JSX `{ }` because only expressions are allowed (Chapter 2).
+
+**Combining lists and conditions (empty state):**
+```jsx
+{available.length > 0 ? (
+  available.map((person) => <ProfileCard key={person.id} {...person} />)
+) : (
+  <p>No one is available right now.</p>
+)}
+```
+
+**Folder structure:**
+```
+src/
+├── components/
+│   ├── Header.jsx
+│   └── ProfileCard.jsx
+├── data/
+│   └── people.js          ← our array of data lives here
+├── App.jsx
+├── main.jsx
+└── index.css
+```
+> Keeping data in its own file keeps `App.jsx` clean. Later this data will come from an API.
+
+**Practice task I did:**
+
+`src/data/people.js`
+```js
+const people = [
+  { id: 1, name: "Aadit", role: "Computer Engineering Student", experience: 1, isOpenToWork: true },
+  { id: 2, name: "Riya", role: "UI Designer", experience: 3, isOpenToWork: false },
+  { id: 3, name: "Karan", role: "Backend Developer", experience: 2, isOpenToWork: true },
+  { id: 4, name: "Meera", role: "Data Analyst", experience: 5, isOpenToWork: false },
+]
+
+export default people
+```
+
+`src/components/ProfileCard.jsx`
+```jsx
+function ProfileCard({ name, role, experience, isOpenToWork }) {
+  return (
+    <div style={{ border: "1px solid gray", padding: "12px", margin: "12px", width: "280px" }}>
+      <h2>
+        {name} {experience >= 3 && <span>⭐ Senior</span>}
+      </h2>
+      <p>{role}</p>
+      <p>Experience: {experience} year(s)</p>
+      <p>{isOpenToWork ? "🟢 Open to work" : "🔴 Not looking right now"}</p>
+    </div>
+  )
+}
+
+export default ProfileCard
+```
+
+`src/App.jsx`
+```jsx
+import ProfileCard from './components/ProfileCard'
+import people from './data/people'
+
+function App() {
+  const available = people.filter((person) => person.isOpenToWork)
+
+  return (
+    <>
+      <h1>All People ({people.length})</h1>
+      {people.map((person) => (
+        <ProfileCard key={person.id} {...person} />
+      ))}
+
+      <h1>Available People ({available.length})</h1>
+      {available.length > 0 ? (
+        available.map((person) => (
+          <ProfileCard key={person.id} {...person} />
+        ))
+      ) : (
+        <p>No one is available right now.</p>
+      )}
+    </>
+  )
+}
+
+export default App
+```
+> Try setting every `isOpenToWork` to `false` in `people.js`. The "No one is available" message should appear.
+
+**Common errors:**
+
+| Error | Fix |
+|-------|-----|
+| `Each child in a list should have a unique "key" prop` | Add `key={item.id}` to the outermost element inside `map()` |
+| List renders nothing | Used `forEach` (returns nothing) or forgot `return` inside `map()` with `{ }` body |
+| `0` appears on the page | Used `count && ...`, change to `count > 0 && ...` |
+| `Cannot read properties of undefined (reading 'map')` | The array is undefined, give it a default (`items = []`) |
+| Items jump or show wrong data after reorder | Using `index` or random value as key, use a stable id |
+| `Unexpected token` when using `if` inside JSX | Use ternary / `&&`, or move the `if` above the `return` |
+
+**Key takeaway:** Use `map()` to turn arrays into JSX and always give each item a stable, unique `key`. Use `filter()` before `map()` to show part of a list. For conditions use `if` (whole component), ternary (two options) and `&&` (something or nothing), and make `&&` checks true/false to avoid the `0` trap.
 
 ---
