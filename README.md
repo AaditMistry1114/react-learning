@@ -6,12 +6,12 @@
 
 ## 📊 Overall Progress
 
-![Progress](https://img.shields.io/badge/Progress-5%2F21%20Chapters-brightgreen)
+![Progress](https://img.shields.io/badge/Progress-6%2F21%20Chapters-brightgreen)
 ![Status](https://img.shields.io/badge/Status-Active-blue)
 ![Started](https://img.shields.io/badge/Started-30%20Sep%202026-orange)
 
 ```
-Progress: ███████░░░░░░░░░░░░░░░░░░░░░░░  5/21 Chapters (24%)
+Progress: █████████░░░░░░░░░░░░░░░░░░░░░  6/21 Chapters (29%)
 ```
 
 ---
@@ -25,7 +25,7 @@ Progress: ███████░░░░░░░░░░░░░░░░�
 | Chapter 3 | Components | 01 Oct 2026 | ✅ Done |
 | Chapter 4 | Props | 01 Oct 2026 | ✅ Done |
 | Chapter 5 | Rendering Lists & Conditional Rendering | 02 Oct 2026 | ✅ Done |
-| Chapter 6 | Handling Events | - | ⏳ Pending |
+| Chapter 6 | Handling Events | 03 Oct 2026 | ✅ Done |
 | Chapter 7 | State with useState | - | ⏳ Pending |
 | Chapter 8 | Controlled Inputs & Forms | - | ⏳ Pending |
 | Chapter 9 | Lifting State Up & Component Communication | - | ⏳ Pending |
@@ -1216,5 +1216,292 @@ export default App
 | `Unexpected token` when using `if` inside JSX | Use ternary / `&&`, or move the `if` above the `return` |
 
 **Key takeaway:** Use `map()` to turn arrays into JSX and always give each item a stable, unique `key`. Use `filter()` before `map()` to show part of a list. For conditions use `if` (whole component), ternary (two options) and `&&` (something or nothing), and make `&&` checks true/false to avoid the `0` trap.
+
+---
+
+### ✅ Chapter 6 — Handling Events
+
+**Prerequisites (quick summary):**
+
+| Prerequisite | What it is (simple) |
+|--------------|---------------------|
+| Props (Chapter 4) | Data (and functions) passed from parent to child |
+| JS functions | `function sayHi() {}` and arrow functions `() => {}` |
+| DOM events | Things that happen on a page: click, typing, submit, hover |
+| Callback | A function you pass to something else, to be called later |
+
+**What is an Event?**
+An event is something the user does on the page: clicking a button, typing in an input, submitting a form, hovering over an element. An **event handler** is the function that runs when that event happens.
+
+```
+User clicks button  →  event happens  →  React calls your handler function
+```
+
+**Plain JS vs React:**
+
+| Plain HTML / JS | React (JSX) |
+|-----------------|-------------|
+| `onclick="sayHi()"` (string) | `onClick={sayHi}` (function) |
+| lowercase `onclick` | camelCase `onClick` |
+| `addEventListener(...)` | Not needed, write it directly on the element |
+
+**Basic syntax:**
+```jsx
+function App() {
+  function handleClick() {
+    console.log("Button clicked!")
+  }
+
+  return <button onClick={handleClick}>Click me</button>
+}
+```
+> Open the browser console (F12) to see the log.
+
+**Three ways to write a handler:**
+
+```jsx
+// 1. Named function (best for anything longer than one line)
+function handleClick() {
+  console.log("clicked")
+}
+<button onClick={handleClick}>Click</button>
+
+// 2. Inline arrow function (fine for short one-liners)
+<button onClick={() => console.log("clicked")}>Click</button>
+
+// 3. Arrow function stored in a variable
+const handleClick = () => console.log("clicked")
+<button onClick={handleClick}>Click</button>
+```
+
+**⚠️ The #1 beginner mistake: calling the function instead of passing it**
+
+```jsx
+// ❌ Wrong — runs immediately when the page loads, not on click
+<button onClick={handleClick()}>Click</button>
+
+// ✅ Right — passes the function, React calls it on click
+<button onClick={handleClick}>Click</button>
+```
+```
+onClick={handleClick}    → "run this function WHEN clicked"
+onClick={handleClick()}  → "run this function NOW, give the result to onClick"
+```
+
+**Passing arguments to a handler:** wrap the call in an arrow function.
+```jsx
+function greet(name) {
+  console.log("Hello, " + name)
+}
+
+// ❌ Wrong — runs immediately
+<button onClick={greet("Aadit")}>Greet</button>
+
+// ✅ Right — arrow function waits until the click
+<button onClick={() => greet("Aadit")}>Greet</button>
+```
+
+**The event object:** React gives your handler an object describing the event, as the first argument.
+```jsx
+function handleChange(event) {
+  console.log(event.target.value)   // text typed in the input
+}
+
+<input onChange={handleChange} />
+```
+
+| Property | Meaning |
+|----------|---------|
+| `event.target` | The element that triggered the event |
+| `event.target.value` | Current value of an input |
+| `event.target.checked` | Whether a checkbox is ticked |
+| `event.type` | Type of event (`"click"`, `"change"`) |
+| `event.preventDefault()` | Stop the browser's default behaviour |
+| `event.stopPropagation()` | Stop the event from reaching parent elements |
+
+> The event object in React is a "SyntheticEvent": React's wrapper that works the same in every browser.
+
+**Using both the event and your own argument:**
+```jsx
+<button onClick={(event) => handleHire(event, person.name)}>Hire</button>
+```
+
+**Common events:**
+
+| Event | When it fires | Used on |
+|-------|---------------|---------|
+| `onClick` | Element is clicked | buttons, divs, links |
+| `onChange` | Value changes (every keystroke in text inputs) | input, select, textarea |
+| `onSubmit` | Form is submitted | form |
+| `onMouseEnter` / `onMouseLeave` | Mouse enters / leaves | any element |
+| `onFocus` / `onBlur` | Element gains / loses focus | inputs |
+| `onKeyDown` / `onKeyUp` | A key is pressed / released | inputs, any focusable element |
+| `onDoubleClick` | Double click | any element |
+
+**preventDefault — stopping default browser behaviour**
+A form refreshes the whole page when submitted. In React we stop that:
+```jsx
+function handleSubmit(event) {
+  event.preventDefault()    // stop the page refresh
+  console.log("Form submitted")
+}
+
+<form onSubmit={handleSubmit}>
+  <input type="text" />
+  <button type="submit">Send</button>
+</form>
+```
+
+**stopPropagation — event bubbling**
+Events "bubble up": a click on a button inside a card also counts as a click on the card.
+```
+Button click  →  button's onClick runs
+              →  card's onClick runs   (bubbles up to parent)
+              →  page's onClick runs
+```
+Stop it with `event.stopPropagation()`:
+```jsx
+<div onClick={() => console.log("card clicked")}>
+  <button
+    onClick={(event) => {
+      event.stopPropagation()
+      console.log("button clicked only")
+    }}
+  >
+    Hire
+  </button>
+</div>
+```
+
+**Passing handlers as props (child → parent communication)**
+Props only flow down, but you can send a FUNCTION down. The child calls it, and the code runs in the parent. This is how a child "talks" to its parent.
+
+```
+App (owns handleHire)
+ │  onHire={handleHire}      ← function passed down as a prop
+ ▼
+ProfileCard
+ │  <button onClick={() => onHire(name)}>   ← child calls it
+ ▼
+handleHire runs inside App
+```
+
+Naming convention:
+
+| Where | Naming | Example |
+|-------|--------|---------|
+| Prop name (child receives) | starts with `on` | `onHire`, `onDelete` |
+| Handler function (parent defines) | starts with `handle` | `handleHire`, `handleDelete` |
+
+> This pattern is the foundation of Chapter 9 (Lifting State Up).
+
+**A limitation (what's coming next):**
+Handlers can log, alert, or call functions, but they cannot yet change what's shown on the screen. A normal variable like `let count = 0` that you change inside a handler will NOT update the UI. For that we need **state** (Chapter 7).
+
+**Folder structure:**
+```
+src/
+├── components/
+│   ├── ProfileCard.jsx    ← buttons with handlers
+│   └── ContactForm.jsx    ← form with onChange / onSubmit
+├── App.jsx                ← owns handleHire, passes it down
+├── main.jsx
+└── index.css
+```
+
+**Practice task I did:**
+
+`src/components/ProfileCard.jsx`
+```jsx
+function ProfileCard({ name, role, onHire }) {
+  function handleCardClick() {
+    console.log("Card clicked:", name)
+  }
+
+  function handleGreet() {
+    alert("Hello, " + name + "!")
+  }
+
+  function handleHireClick(event) {
+    event.stopPropagation()   // don't trigger the card's onClick
+    onHire(name)              // call the function from the parent
+  }
+
+  return (
+    <div
+      onClick={handleCardClick}
+      onMouseEnter={() => console.log("Hovering over", name)}
+      style={{ border: "1px solid gray", padding: "12px", margin: "12px", width: "280px" }}
+    >
+      <h2>{name}</h2>
+      <p>{role}</p>
+      <button onClick={handleGreet}>Say hello</button>
+      <button onClick={handleHireClick}>Hire</button>
+    </div>
+  )
+}
+
+export default ProfileCard
+```
+
+`src/components/ContactForm.jsx`
+```jsx
+function ContactForm() {
+  function handleChange(event) {
+    console.log("Typing:", event.target.value)
+  }
+
+  function handleSubmit(event) {
+    event.preventDefault()
+    alert("Form submitted!")
+  }
+
+  return (
+    <form onSubmit={handleSubmit} style={{ margin: "12px" }}>
+      <input type="text" placeholder="Your name" onChange={handleChange} />
+      <button type="submit">Send</button>
+    </form>
+  )
+}
+
+export default ContactForm
+```
+
+`src/App.jsx`
+```jsx
+import ProfileCard from './components/ProfileCard'
+import ContactForm from './components/ContactForm'
+
+function App() {
+  function handleHire(name) {
+    console.log("Hiring request sent for", name)
+  }
+
+  return (
+    <>
+      <h1>Handling Events</h1>
+      <ProfileCard name="Aadit" role="Computer Engineering Student" onHire={handleHire} />
+      <ProfileCard name="Riya" role="UI Designer" onHire={handleHire} />
+      <ContactForm />
+    </>
+  )
+}
+
+export default App
+```
+> Open the console (F12). Click the card, click "Hire" (only the hire log appears because of `stopPropagation`), hover over a card, type in the input, and submit the form (the page does not refresh).
+
+**Common errors:**
+
+| Error | Fix |
+|-------|-----|
+| Handler runs on page load, not on click | Wrote `onClick={fn()}`, use `onClick={fn}` or `onClick={() => fn()}` |
+| Nothing happens on click | Used `onclick` (lowercase) or `onClick="fn"` (string), use `onClick={fn}` |
+| Form submit refreshes the page | Forgot `event.preventDefault()` |
+| `onHire is not a function` | Parent didn't pass the prop, or prop names don't match |
+| Button inside card triggers the card's click too | Add `event.stopPropagation()` |
+| Changed a variable but UI didn't update | Normal variables don't re-render, use state (Chapter 7) |
+
+**Key takeaway:** Events use camelCase props like `onClick` and receive a function, never a function call. Use an arrow function to pass arguments, `preventDefault()` for forms, and pass functions as props so a child can notify its parent. To actually change the screen after an event, we need state.
 
 ---
