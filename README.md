@@ -6,12 +6,12 @@
 
 ## 📊 Overall Progress
 
-![Progress](https://img.shields.io/badge/Progress-6%2F21%20Chapters-brightgreen)
+![Progress](https://img.shields.io/badge/Progress-7%2F21%20Chapters-brightgreen)
 ![Status](https://img.shields.io/badge/Status-Active-blue)
 ![Started](https://img.shields.io/badge/Started-30%20Sep%202026-orange)
 
 ```
-Progress: █████████░░░░░░░░░░░░░░░░░░░░░  6/21 Chapters (29%)
+Progress: ██████████░░░░░░░░░░░░░░░░░░░░  7/21 Chapters (33%)
 ```
 
 ---
@@ -26,7 +26,7 @@ Progress: █████████░░░░░░░░░░░░░░�
 | Chapter 4 | Props | 01 Oct 2026 | ✅ Done |
 | Chapter 5 | Rendering Lists & Conditional Rendering | 02 Oct 2026 | ✅ Done |
 | Chapter 6 | Handling Events | 03 Oct 2026 | ✅ Done |
-| Chapter 7 | State with useState | - | ⏳ Pending |
+| Chapter 7 | State with useState | 04 Oct 2026 | ✅ Done |
 | Chapter 8 | Controlled Inputs & Forms | - | ⏳ Pending |
 | Chapter 9 | Lifting State Up & Component Communication | - | ⏳ Pending |
 | Chapter 10 | useEffect | - | ⏳ Pending |
@@ -1503,5 +1503,403 @@ export default App
 | Changed a variable but UI didn't update | Normal variables don't re-render, use state (Chapter 7) |
 
 **Key takeaway:** Events use camelCase props like `onClick` and receive a function, never a function call. Use an arrow function to pass arguments, `preventDefault()` for forms, and pass functions as props so a child can notify its parent. To actually change the screen after an event, we need state.
+
+---
+
+### ✅ Chapter 7 — State with useState
+
+**Prerequisites (quick summary):**
+
+| Prerequisite | What it is (simple) |
+|--------------|---------------------|
+| Events (Chapter 6) | Handlers like `onClick` that run when the user does something |
+| Props (Chapter 4) | Data passed from parent to child (read-only) |
+| Array destructuring | Pulling items out of an array by position: `const [a, b] = [10, 20]` → `a = 10`, `b = 20` |
+| Spread operator `...` | Copies items/properties: `[...arr, 4]`, `{...obj, age: 22}` |
+| `map()` / `filter()` | Return NEW arrays (Chapter 5) |
+
+**What is State?**
+State is a component's memory. It is data that can change over time, and when it changes, React redraws the component so the screen shows the new value.
+
+```
+User clicks button → handler runs → state changes → React re-renders → screen updates
+```
+
+**Props vs State:**
+
+| | Props | State |
+|---|-------|-------|
+| Who owns it | Parent component | The component itself |
+| Can the component change it? | ❌ No, read-only | ✅ Yes, using the setter function |
+| Purpose | Receive data from outside | Remember data that changes inside |
+| Example | `name="Aadit"` | `count`, `isOpen`, `items` |
+
+**The problem state solves (from Chapter 6):**
+```jsx
+function Counter() {
+  let count = 0
+
+  function handleClick() {
+    count = count + 1
+    console.log(count)     // logs 1, 2, 3... but the screen still shows 0
+  }
+
+  return <button onClick={handleClick}>Count: {count}</button>
+}
+```
+
+A normal variable fails for two reasons:
+
+| Reason | Meaning |
+|--------|---------|
+| It doesn't persist | Every time the component runs again, `let count = 0` resets to 0 |
+| It doesn't trigger a re-render | React has no idea the variable changed, so the screen stays the same |
+
+**The fix — `useState`:**
+```jsx
+import { useState } from 'react'
+
+function Counter() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  )
+}
+```
+
+**Syntax explained:**
+```jsx
+const [count, setCount] = useState(0)
+       │       │                 │
+       │       │                 └── initial value (used only on the first render)
+       │       └── setter function: the ONLY way to change the value
+       └── current value of the state
+```
+
+| Part | Meaning |
+|------|---------|
+| `useState(0)` | Creates a piece of state starting at `0` |
+| `count` | Read the current value here |
+| `setCount(5)` | Replace the value with 5 and ask React to re-render |
+| Naming | `[thing, setThing]`, e.g. `[isOpen, setIsOpen]`, `[name, setName]` |
+
+**What happens when you click (step by step):**
+```
+1. First render      → count = 0, screen shows "Count: 0"
+2. User clicks       → setCount(1) is called
+3. React re-renders  → runs Counter() again, useState now returns 1
+4. Screen updates    → "Count: 1"
+```
+> React remembers the value between renders. That is the magic of `useState`.
+
+**Hooks and the Rules of Hooks:**
+`useState` is a **hook**: a special function (name starts with `use`) that lets a component use React features.
+
+| Rule | Why |
+|------|-----|
+| Call hooks only at the top level of a component | Not inside `if`, loops, or nested functions |
+| Call hooks only inside components (or custom hooks) | Not in normal JS functions |
+| Always call them in the same order every render | React tracks state by call order |
+
+```jsx
+// ❌ Wrong
+if (isLoggedIn) {
+  const [name, setName] = useState("")
+}
+
+// ✅ Right — hook at the top, put the condition inside
+const [name, setName] = useState("")
+```
+
+**State is a snapshot (very important):**
+Inside one render, the state value never changes. `setCount` schedules the NEXT render, it doesn't change `count` right now.
+
+```jsx
+function handleClick() {
+  setCount(count + 1)
+  console.log(count)      // still the OLD value
+}
+```
+
+```jsx
+function handleClick() {
+  setCount(count + 1)   // count is 0 → sets 1
+  setCount(count + 1)   // count is still 0 → sets 1
+  setCount(count + 1)   // count is still 0 → sets 1
+}
+// Result after one click: 1, not 3
+```
+
+**Updating based on the previous value — functional update:**
+Pass a function to the setter. React gives it the latest value.
+```jsx
+setCount((prev) => prev + 1)
+setCount((prev) => prev + 1)
+setCount((prev) => prev + 1)
+// Result after one click: 3 ✅
+```
+
+| Situation | Use |
+|-----------|-----|
+| New value doesn't depend on the old one | `setName("Aadit")` |
+| New value is based on the old one | `setCount((prev) => prev + 1)` |
+
+**Never change state directly:**
+```jsx
+count = count + 1       // ❌ React doesn't know it changed
+count++                 // ❌ same problem
+setCount(count + 1)     // ✅ always use the setter
+```
+
+**State with different types:**
+
+| Type | Example |
+|------|---------|
+| Number | `const [count, setCount] = useState(0)` |
+| String | `const [name, setName] = useState("")` |
+| Boolean | `const [isOpen, setIsOpen] = useState(false)` |
+| Object | `const [user, setUser] = useState({ name: "Aadit", age: 21 })` |
+| Array | `const [items, setItems] = useState([])` |
+
+**Toggling a boolean:**
+```jsx
+const [isOpen, setIsOpen] = useState(false)
+
+<button onClick={() => setIsOpen(!isOpen)}>Toggle</button>
+{isOpen && <p>Details are visible</p>}
+```
+> This joins Chapter 5 (conditional rendering) with state.
+
+**Object state — never mutate, always copy:**
+```jsx
+const [user, setUser] = useState({ name: "Aadit", age: 21 })
+
+// ❌ Wrong — changes the original object
+user.age = 22
+
+// ✅ Right — new object: copy everything, overwrite one property
+setUser({ ...user, age: 22 })
+```
+
+**Array state — never mutate, always make a new array:**
+
+| Action | ❌ Avoid (mutates) | ✅ Use (new array) |
+|--------|---------------------|---------------------|
+| Add | `push`, `unshift` | `[...items, newItem]` |
+| Remove | `pop`, `splice` | `items.filter((i) => i.id !== id)` |
+| Update one item | `items[0] = x` | `items.map((i) => i.id === id ? { ...i, done: true } : i)` |
+| Sort | `items.sort()` | `[...items].sort()` |
+
+```jsx
+setItems([...items, "New item"])                       // add
+setItems(items.filter((item) => item !== "Old item"))  // remove
+```
+
+**Why not mutate?**
+React decides to re-render by checking whether the value is a NEW value. If you change the same array/object in place, React sees the same reference and may skip the update.
+
+**Multiple state variables:**
+Use separate `useState` calls for unrelated values.
+```jsx
+const [count, setCount] = useState(0)
+const [isOpen, setIsOpen] = useState(false)
+const [name, setName] = useState("")
+```
+> If values always change together (like `x` and `y` of a position), one object is fine.
+
+**Each component has its own state:**
+```jsx
+<Counter />
+<Counter />
+```
+Two counters = two separate states. Clicking one doesn't affect the other.
+
+**Folder structure:**
+```
+src/
+├── components/
+│   ├── Counter.jsx        ← number state, functional updates
+│   ├── Settings.jsx       ← object state
+│   └── ProfileCard.jsx    ← boolean + number state, calls parent's handler
+├── App.jsx                ← array state (shortlist)
+├── main.jsx
+└── index.css
+```
+
+**Practice task I did:**
+
+`src/components/Counter.jsx`
+```jsx
+import { useState } from 'react'
+
+function Counter() {
+  const [count, setCount] = useState(0)
+
+  return (
+    <div style={{ margin: "12px" }}>
+      <h2>Count: {count}</h2>
+      <button onClick={() => setCount((prev) => prev - 1)}>-1</button>
+      <button onClick={() => setCount(0)}>Reset</button>
+      <button onClick={() => setCount((prev) => prev + 1)}>+1</button>
+      <button
+        onClick={() => {
+          setCount((prev) => prev + 1)
+          setCount((prev) => prev + 1)
+          setCount((prev) => prev + 1)
+        }}
+      >
+        +3
+      </button>
+    </div>
+  )
+}
+
+export default Counter
+```
+
+`src/components/Settings.jsx` (object state)
+```jsx
+import { useState } from 'react'
+
+function Settings() {
+  const [settings, setSettings] = useState({ theme: "light", fontSize: 16 })
+
+  function toggleTheme() {
+    setSettings({
+      ...settings,
+      theme: settings.theme === "light" ? "dark" : "light",
+    })
+  }
+
+  function increaseFont() {
+    setSettings({ ...settings, fontSize: settings.fontSize + 2 })
+  }
+
+  const isDark = settings.theme === "dark"
+
+  return (
+    <div
+      style={{
+        margin: "12px",
+        padding: "12px",
+        background: isDark ? "#222" : "#eee",
+        color: isDark ? "white" : "black",
+        fontSize: settings.fontSize,
+      }}
+    >
+      <p>Theme: {settings.theme} | Font size: {settings.fontSize}px</p>
+      <button onClick={toggleTheme}>Toggle theme</button>
+      <button onClick={increaseFont}>Bigger text</button>
+    </div>
+  )
+}
+
+export default Settings
+```
+
+`src/components/ProfileCard.jsx` (boolean + number state)
+```jsx
+import { useState } from 'react'
+
+function ProfileCard({ name, role, experience, onShortlist }) {
+  const [showDetails, setShowDetails] = useState(false)
+  const [likes, setLikes] = useState(0)
+
+  return (
+    <div style={{ border: "1px solid gray", padding: "12px", margin: "12px", width: "280px" }}>
+      <h2>{name}</h2>
+      <p>{role}</p>
+
+      <button onClick={() => setShowDetails(!showDetails)}>
+        {showDetails ? "Hide details" : "Show details"}
+      </button>
+      {showDetails && <p>Experience: {experience} year(s)</p>}
+
+      <div>
+        <button onClick={() => setLikes((prev) => prev + 1)}>👍 {likes}</button>
+        <button onClick={() => onShortlist(name)}>Shortlist</button>
+      </div>
+    </div>
+  )
+}
+
+export default ProfileCard
+```
+
+`src/App.jsx` (array state)
+```jsx
+import { useState } from 'react'
+import Counter from './components/Counter'
+import Settings from './components/Settings'
+import ProfileCard from './components/ProfileCard'
+
+const people = [
+  { id: 1, name: "Aadit", role: "Computer Engineering Student", experience: 1 },
+  { id: 2, name: "Riya", role: "UI Designer", experience: 3 },
+  { id: 3, name: "Karan", role: "Backend Developer", experience: 2 },
+]
+
+function App() {
+  const [shortlist, setShortlist] = useState([])
+
+  function handleShortlist(name) {
+    if (shortlist.includes(name)) return          // no duplicates
+    setShortlist([...shortlist, name])             // add: new array
+  }
+
+  function handleRemove(name) {
+    setShortlist(shortlist.filter((n) => n !== name))   // remove: filter
+  }
+
+  return (
+    <>
+      <h1>State Practice</h1>
+
+      <Counter />
+      <Counter />
+      <Settings />
+
+      {people.map((person) => (
+        <ProfileCard key={person.id} {...person} onShortlist={handleShortlist} />
+      ))}
+
+      <h2>Shortlist ({shortlist.length})</h2>
+      {shortlist.length === 0 ? (
+        <p>No one shortlisted yet.</p>
+      ) : (
+        <ul>
+          {shortlist.map((name) => (
+            <li key={name}>
+              {name} <button onClick={() => handleRemove(name)}>Remove</button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button onClick={() => setShortlist([])}>Clear all</button>
+    </>
+  )
+}
+
+export default App
+```
+> The two `<Counter />` components keep separate counts. The "+3" button works because of the functional update. The shortlist lives in `App` because `App` needs to display it, and each card tells `App` to update it through the `onShortlist` prop (this pattern is formalised in Chapter 9).
+
+**Common errors:**
+
+| Error | Fix |
+|-------|-----|
+| Screen doesn't update after change | Changed a normal variable or mutated state directly, use the setter with a new value |
+| Count only goes up by 1 instead of 3 | Used `setCount(count + 1)` three times, use `setCount((prev) => prev + 1)` |
+| `console.log(state)` right after the setter shows the old value | State is a snapshot, the new value appears on the next render |
+| Array/object state doesn't update | Mutated with `push` / `obj.x = ...`, create a new copy with spread / `filter` / `map` |
+| `Too many re-renders` | Wrote `onClick={setCount(1)}` (called immediately), use `onClick={() => setCount(1)}` |
+| `Invalid hook call` / hooks error | Hook used inside an `if`, loop, or normal function |
+| `useState is not defined` | Forgot `import { useState } from 'react'` |
+| `x.map is not a function` | State started as `""` or `{}` instead of `[]` |
+
+**Key takeaway:** State is a component's memory. Use `useState` to store data that changes, and always change it through the setter, never directly. For objects and arrays, create a new copy (spread, `filter`, `map`) instead of mutating. Use the functional form `setX((prev) => ...)` when the new value depends on the old one. Every state change triggers a re-render.
 
 ---
